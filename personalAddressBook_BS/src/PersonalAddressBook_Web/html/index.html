@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Address Book</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.1/jquery.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+    <div id="main_Div">
+        <div id="head_Search_Div">
+            <form id="save_form">
+                Name:<input type="text" name="name" id="address_name">
+                phoneNumber:<input type="text" name="phoneNumber" id="Phone_Number">
+                Address:<input type="text" name="address" id="address">
+            </form>
+            <input id="save" class="submmit_button" type="button" value="submit">
+        </div>
+        <div id="list_Div">
+            <ol id="address_list">
+            </ol>
+        </div>
+    </div>
+</body>
+
+<script>
+    function reloadList() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:80/address/list",
+            dataType: "json",
+            success: function (data) {
+                if (data.success == true) {
+                    $("#address_list").html("");
+                    var address = data.data;
+                    var length = data.data.length;
+                    for (var i = 0; i < length; i++) {
+                        document.getElementById("address_list").innerHTML +=
+                            "<li name = \"address_li\"><span class = \"address_Name\">" + address[i]
+                            .name + "</span><span class = \"address_phoneNumber\">" + address[i]
+                            .phoneNumber + "</span><span class = \"address_address\">" + address[i]
+                            .address +
+                            "</span><button class=\"address_Update\" type=\"button\" onclick = \"update(this)\" value=" +
+                            address[i].id +
+                            ">UPDATE</button><button class=\"address_Delete\" type=\"button\" onclick = \"deleteAddress(this)\" value=" +
+                            address[i].id + ">DELETE</button></li>"
+                    }
+                }
+            }
+        })
+    }
+
+    $(document).ready(function () {
+        reloadList();
+
+        $("#save").on("click", function () {
+            var newAddress = $("#save_form").serializeArray();
+
+            $.ajax({
+                url: "http://localhost:80/address/saveOrUpdate",
+                data: newAddress,
+                type: "post",
+                dataType: "json"
+            }).done(function (data) {
+                console.log(data);
+                if (data.success) {
+                    console.log(newAddress[3])
+                    if (newAddress[3] != null) {
+                        $("#addressIdInput").remove();
+                        console.log("remove success");
+                    }
+
+                    reloadList();
+                }
+            })
+        })
+    })
+
+
+    function update(params) {
+        if (document.getElementById("addressIdInput"))(
+            alert("请勿重复更新")
+        )
+        else {
+            var id = params.getAttribute("value");
+            var list = params.parentNode.children;
+            var name = list[0].innerHTML;
+            var phoneNumber = list[1].innerHTML;
+            var address = list[2].innerHTML;
+            document.getElementById("save_form").innerHTML +=
+                "<input type=\"hidden\" id = \"addressIdInput\" name = \"id\" value=" + id + ">";
+            $("#address_name").val(name);
+            $("#Phone_Number").val(phoneNumber);
+            $("#address").val(address);
+            console.log("Add success");
+        }
+    }
+
+    function deleteAddress(params) {
+        var id = params.getAttribute("value");
+        console.log(id);
+        $.ajax({
+            url: "http://localhost:80/address/deleteById",
+            data: {
+                "id": id
+            },
+            type: "post",
+            dataType: "html"
+        }).done(function (data) {
+
+
+            reloadList();
+            console.log(data)
+
+        })
+    }
+</script>
+
+</html>
